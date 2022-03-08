@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Naujas straipsnis{% endblock %}
+
+
+{% block content %}
+
+<br/>
+<form action="#", method="post">
+  <div class="form-group">
+    <label for="autorius">Autorius</label>
+    <input type="text" class="form-control" id="autorius" name="autorius">
+  </div>
+  <div class="form-group">
+    <label for="pavadinimas">Pavadinimas</label>
+    <input type="text" class="form-control" id="pavadinimas" name="pavadinimas">
+  </div>
+  <div class="form-group">
+    <label for="date">Data</label>
+    <input type="text" class="form-control" id="date" name="date">
+  </div>
+  <div class="form-group">
+    <label for="tekstas">Tekstas</label>
+    <textarea class="form-control" id="tekstas" name="tekstas" rows="15"></textarea>
+  </div>
+  <button type="submit" class="btn btn-secondary">Pateikti</button>
+</form>
+<br/>
+{% endblock %}
