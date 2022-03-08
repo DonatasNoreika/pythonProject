@@ -9,4 +9,4 @@ class ContactForm(FlaskForm):
     body = TextAreaField('Jūsų pranešimas', [DataRequired(),
                                         Length(min=10,
                                         message=('Per trumpas tekstas.'))])
-    submit = SubmitField('Submit')
+    submit = SubmitField('Pateikti')

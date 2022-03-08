@@ -4,7 +4,10 @@
 
 
 {% block content %}
-<br/>
-<h1>Jūsų pranešimas išsiųstas</h1>
+<h1>Forma užpildyta sėkmingai!</h1>
+<p>Vardas: {{form.name.data}}</p>
+<p>El. paštas: {{form.email.data}}</p>
+<p>Tekstas:</p>
+<p>{{form.body.data}}</p>
 
 {% endblock %}
