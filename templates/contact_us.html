@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Susisiekime su mumis{% endblock %}
+
+
+{% block content %}
+<br/>
+  <form method="post" action="#">
+      {{ form.hidden_tag() }}
+      {{ form.csrf_token }}
+      <div class="form-group">
+      {{ form.name.label(class="form-control-label") }}
+      {{ form.name(class="form-control") }}
+      </div>
+      <div class="form-group">
+      {{ form.email.label(class="form-control-label") }}
+      {{ form.email(class="form-control") }}
+      </div>
+      <div class="form-group">
+      {{ form.body.label(class="form-control-label") }}
+      {{ form.body(class="form-control", rows="5") }}
+      </div>
+      {{ form.submit }}
+  </form>
+
+{% endblock %}
