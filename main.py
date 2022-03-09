@@ -1,31 +1,35 @@
 from flask import Flask, render_template, request, url_for, redirect
 from forms import ContactForm, RegisterForm
+from flask_sqlalchemy import SQLAlchemy
+import os
 
+basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dfgsfdgsdfgsdfgsdf'
 
-straipsniai = [{
-    'data': '2020 01 01',
-    'autorius': 'Autorius 1',
-    'pavadinimas': 'Apie nieką',
-    'tekstas': 'Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpora quaeritis. Summus brains sit​​, morbo vel maleficia? De apocalypsi gorger omero undead survivor dictum mauris.',
-    'status': 'published'
-    },
-    {
-        'data': '2020 02 01',
-        'autorius': 'KITAS AUTORIUS',
-        'pavadinimas': 'Apie zombius',
-        'tekstas': 'Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpora quaeritis. Summus brains sit​​, morbo vel maleficia? De apocalypsi gorger omero undead survivor dictum mauris. ',
-        'status': 'published'
-    },
-    {
-        'data': '2020 03 01',
-        'autorius': 'Dar kažkas',
-        'pavadinimas': 'Braiiins!',
-        'tekstas': 'Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpora quaeritis. Summus brains sit​​, morbo vel maleficia? De apocalypsi gorger omero undead survivor dictum mauris.',
-        'status': 'unpublished'
-    }]
 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'my_site.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+
+class Article(db.Model):
+    __tablename__ = 'article'
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.String(80), nullable=False)
+    autorius = db.Column(db.String(120), unique=True, nullable=False)
+    pavadinimas = db.Column(db.String(120), unique=True, nullable=False)
+    tekstas = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(120), default="published")
+
+    def __init__(self, data, autorius, pavadinimas, tekstas):
+        self.data = data
+        self.autorius = autorius
+        self.pavadinimas = pavadinimas
+        self.tekstas = tekstas
+
+    def __repr__(self):
+        return f'{self.data} - {self.pavadinimas}'
 
 @app.route('/about')
 def about():
@@ -39,12 +43,14 @@ def home():
 
 @app.route('/straipsniai')
 def index():
+    straipsniai = Article.query.all()
     return render_template('index.html', straipsniai=straipsniai)
 
 
-@app.route('/straipsniai/<string:title>')
-def article(title):
-    return render_template('article.html', title=title, straipsniai=straipsniai)
+@app.route('/straipsniai/<int:id>')
+def article(id):
+    straipsnis = Article.query.get(id)
+    return render_template('article.html', straipsnis=straipsnis)
 
 
 @app.route('/add_article', methods=['GET', 'POST'])
@@ -54,17 +60,18 @@ def add_article():
         pavadinimas = request.form['pavadinimas']
         date = request.form['date']
         tekstas = request.form['tekstas']
-        straipsniai.append(
-        {
-            'data': date,
-            'autorius': autorius,
-            'pavadinimas': pavadinimas,
-            'tekstas': tekstas,
-            'status': 'published'
-        }
-        )
+        article = Article(date, autorius, pavadinimas, tekstas)
+        db.session.add(article)
+        db.session.commit()
         return redirect(url_for('index'))
     return render_template('add_article.html')
+
+@app.route('/delete_article/<int:id>')
+def delete_article(id):
+    straipsnis = Article.query.get(id)
+    db.session.delete(straipsnis)
+    db.session.commit()
+    return redirect(url_for('index'))
 
 @app.route('/contact_us', methods=['GET', 'POST'])
 def contact_us():
@@ -83,4 +90,5 @@ def register():
 
 
 if __name__ == '__main__':
+    db.create_all()
     app.run(host='127.0.0.1', port=8000, debug=True)

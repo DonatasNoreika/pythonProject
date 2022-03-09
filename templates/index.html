@@ -9,8 +9,8 @@
 <h3>{{ straipsnis['pavadinimas'] }}</h3>
 <p>{{ straipsnis['data'] }}, {{ straipsnis['autorius'] }}</p>
 <hr>
-<p>{{ straipsnis['tekstas'][:30] }}<a href="{{ url_for('article', title=straipsnis['pavadinimas']) }}">...skaityti toliau</a></p>
-
+<p>{{ straipsnis['tekstas'][:30] }}<a href="{{ url_for('article', id=straipsnis['id']) }}">...skaityti toliau</a></p>
+<button class="btn"><a href="{{ url_for('delete_article', id=straipsnis['id']) }}">IŠTRINTI</a></button>
 <hr>
 {% else %}
 <h3>{{ straipsnis['pavadinimas'] }} - <i>Publikavimas laikinai išjungtas</i></h3>
