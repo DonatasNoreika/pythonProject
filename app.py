@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, url_for, redirect
 from forms import ContactForm, RegisterForm
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -11,7 +12,7 @@ app.config['SECRET_KEY'] = 'dfgsfdgsdfgsdfgsdf'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'my_site.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
+Migrate(app, db)
 
 class Article(db.Model):
     __tablename__ = 'article'
