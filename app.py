@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, url_for, redirect
-from forms import ContactForm, RegisterForm
+from forms import ContactForm, RegisterForm, MessageForm
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
+import datetime
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -31,6 +32,23 @@ class Article(db.Model):
 
     def __repr__(self):
         return f'{self.data} - {self.pavadinimas}'
+
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    fname = db.Column(db.String(80), nullable=False)
+    lname = db.Column(db.String(80), nullable=False)
+    date = db.Column(db.DateTime, default=datetime.datetime.today())
+    comment = db.Column(db.Text, nullable=False)
+
+    def __init__(self, fname, lname, comment):
+        self.fname = fname
+        self.lname = lname
+        self.comment = comment
+
+    def __repr__(self):
+        return f'{self.fname} - {self.lname}'
 
 @app.route('/about')
 def about():
@@ -86,8 +104,26 @@ def contact_us():
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
+        print("Forma validuota")
         return render_template('success.html', form=form)
     return render_template('form.html', form=form)
+
+
+@app.route('/petition', methods=['GET', 'POST'])
+def petition():
+    data = Message.query.all()[::-1]
+    form = MessageForm()
+    if form.validate_on_submit():
+        fname = form.fname.data
+        lname = form.lname.data
+        comment = form.comment.data
+        entry = Message(fname=fname, lname=lname, comment=comment)
+        db.session.add(entry)
+        db.session.commit()
+        data = Message.query.all()[::-1]
+        stats = 20000 - len(data)
+        return render_template('petition.html', form=False, data=data, stats = stats)
+    return render_template('petition.html', form=form, data=data)
 
 
 if __name__ == '__main__':

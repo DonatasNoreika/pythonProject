@@ -22,3 +22,10 @@ class RegisterForm(FlaskForm):
     zip_code = StringField('Pašto kodas', validators=[DataRequired(message='Lauką būtina užpildyti'), Length(min=4, message=('Per mažai simbolių'))])
     agree = BooleanField('Sutinku gauti šlamštą')
     submit = SubmitField('Submit')
+
+
+class MessageForm(FlaskForm):
+    fname = StringField('Vardas', [DataRequired()])
+    lname = StringField('Pavardė', [DataRequired()])
+    comment = TextAreaField('Komentaras')
+    submit = SubmitField('Pasirašyti')
