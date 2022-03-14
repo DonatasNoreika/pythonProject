@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, url_for, redirect
-from forms import ContactForm, RegisterForm, MessageForm
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 import datetime
+
+if __name__ == "__main__":
+    from forms import ContactForm, RegisterForm, MessageForm, TevasForm, VaikasForm
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -50,6 +53,23 @@ class Message(db.Model):
 
     def __repr__(self):
         return f'{self.fname} - {self.lname}'
+
+
+class Tevas(db.Model):
+    __tablename__ = "tevas"
+    id = db.Column(db.Integer, primary_key=True)
+    vardas = db.Column("Vardas", db.String)
+    pavarde = db.Column("Pavardė", db.String)
+    vaikas_id = db.Column(db.Integer, db.ForeignKey("vaikas.id"))
+    vaikas = db.relationship("Vaikas")
+
+
+class Vaikas(db.Model):
+    __tablename__ = "vaikas"
+    id = db.Column(db.Integer, primary_key=True)
+    vardas = db.Column("Vardas", db.String)
+    pavarde = db.Column("Pavardė", db.String)
+
 
 @app.route('/about')
 def about():
@@ -126,6 +146,32 @@ def petition():
         return render_template('petition.html', form=False, data=data, stats = stats)
     return render_template('petition.html', form=form, data=data)
 
+@app.route("/naujas_tevas", methods=["GET", "POST"])
+def new_parent():
+    form = TevasForm()
+    if form.validate_on_submit():
+        naujas_tevas = Tevas(vardas=form.vardas.data, pavarde=form.pavarde.data, vaikas_id=form.vaikas.data.id)
+        db.session.add(naujas_tevas)
+        db.session.commit()
+        return redirect(url_for('parents'))
+    return render_template("add_parent.html", form=form)
+
+
+@app.route("/parents")
+def parents():
+    try:
+        all_parents = Tevas.query.all()
+    except:
+        all_parents = []
+    return render_template("parents.html", all_parents=all_parents)
+
+
+@app.route('/delete_parent/<int:id>')
+def delete_parent(id):
+    tevas = Tevas.query.get(id)
+    db.session.delete(tevas)
+    db.session.commit()
+    return redirect(url_for('parents'))
 
 if __name__ == '__main__':
     db.create_all()
