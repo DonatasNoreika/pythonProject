@@ -39,13 +39,14 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fname = db.Column(db.String(80), nullable=False)
     lname = db.Column(db.String(80), nullable=False)
-    date = db.Column(db.DateTime, default=datetime.datetime.today())
+    date = db.Column(db.DateTime)
     comment = db.Column(db.Text, nullable=False)
 
     def __init__(self, fname, lname, comment):
         self.fname = fname
         self.lname = lname
         self.comment = comment
+        self.date = datetime.datetime.today()
 
     def __repr__(self):
         return f'{self.fname} - {self.lname}'
