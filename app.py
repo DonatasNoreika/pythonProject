@@ -173,6 +173,19 @@ def delete_parent(id):
     db.session.commit()
     return redirect(url_for('parents'))
 
+
+@app.route("/edit_parent/<int:id>", methods=['GET', 'POST'])
+def edit_parent(id):
+    form = TevasForm()
+    tevas = Tevas.query.get(id)
+    if form.validate_on_submit():
+        tevas.vardas = form.vardas.data
+        tevas.pavarde = form.pavarde.data
+        tevas.vaikas_id = form.vaikas.data.id
+        db.session.commit()
+        return redirect(url_for('parents'))
+    return render_template("parent_edit.html", form=form, tevas=tevas)
+
 if __name__ == '__main__':
     db.create_all()
     app.run(host='127.0.0.1', port=8000, debug=True)
