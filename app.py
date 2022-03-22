@@ -1,12 +1,15 @@
-from flask import Flask, render_template, request, url_for, redirect
+from flask import Flask, render_template, request, url_for, redirect, flash
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 import datetime
 
+from flask_login import LoginManager, UserMixin, current_user, logout_user, login_user, login_required
+from flask_bcrypt import Bcrypt
+
 if __name__ == "__main__":
-    from forms import ContactForm, RegisterForm, MessageForm, TevasForm, VaikasForm
+    from forms import ContactForm, RegisterForm, MessageForm, TevasForm, VaikasForm, RegistracijosForma, PrisijungimoForma
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -17,6 +20,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'my_s
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 Migrate(app, db)
+
+login_manager = LoginManager(app)
+login_manager.login_view = 'prisijungti'
+login_manager.login_message_category = 'info'
+
+bcrypt = Bcrypt(app)
 
 class Article(db.Model):
     __tablename__ = 'article'
@@ -70,6 +79,18 @@ class Vaikas(db.Model):
     vardas = db.Column("Vardas", db.String)
     pavarde = db.Column("Pavardė", db.String)
 
+class Vartotojas(db.Model, UserMixin):
+    __tablename__ = "vartotojas"
+    id = db.Column(db.Integer, primary_key=True)
+    vardas = db.Column("Vardas", db.String(20), unique=True, nullable=False)
+    el_pastas = db.Column("El. pašto adresas", db.String(120), unique=True, nullable=False)
+    slaptazodis = db.Column("Slaptažodis", db.String(60), unique=True, nullable=False)
+
+
+@login_manager.user_loader
+def load_user(vartotojo_id):
+    return Vartotojas.query.get(int(vartotojo_id))
+
 
 @app.route('/about')
 def about():
@@ -80,8 +101,8 @@ def about():
 def home():
     return render_template('home.html')
 
-
 @app.route('/straipsniai')
+@login_required
 def index():
     straipsniai = Article.query.all()
     return render_template('index.html', straipsniai=straipsniai)
@@ -185,6 +206,43 @@ def edit_parent(id):
         db.session.commit()
         return redirect(url_for('parents'))
     return render_template("parent_edit.html", form=form, tevas=tevas)
+
+@app.route("/registruotis", methods=['GET', 'POST'])
+def registruotis():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RegistracijosForma()
+    if form.validate_on_submit():
+        koduotas_slaptazodis = bcrypt.generate_password_hash(form.slaptazodis.data).decode('utf-8')
+        vartotojas = Vartotojas(vardas=form.vardas.data, el_pastas=form.el_pastas.data, slaptazodis=koduotas_slaptazodis)
+        db.session.add(vartotojas)
+        db.session.commit()
+        flash('Sėkmingai prisiregistravote! Galite prisijungti', 'success')
+        return redirect(url_for('home'))
+    return render_template('registruotis.html', title='Register', form=form)
+
+
+@app.route("/prisijungti", methods=['GET', 'POST'])
+def prisijungti():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = PrisijungimoForma()
+    if form.validate_on_submit():
+        user = Vartotojas.query.filter_by(el_pastas=form.el_pastas.data).first()
+        if user and bcrypt.check_password_hash(user.slaptazodis, form.slaptazodis.data):
+            login_user(user, remember=form.prisiminti.data)
+            next_page = request.args.get('next')
+            flash('Prisijungti pavyko!', 'success')
+            return redirect(next_page) if next_page else redirect(url_for('home'))
+        else:
+            flash('Prisijungti nepavyko. Patikrinkite el. paštą ir slaptažodį', 'danger')
+    return render_template('prisijungti.html', title='Prisijungti', form=form)
+
+@app.route("/atsijungti")
+def atsijungti():
+    logout_user()
+    flash('Atsijungti pavyko!', 'success')
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     db.create_all()

@@ -39,16 +39,10 @@
                         <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/straipsniai">Straipsniai</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="/about">About</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/contact_us">Contact us</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/register">Registration</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/petition">Petition</a>
@@ -56,12 +50,40 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/parents">Parents</a>
                     </li>
+                {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/straipsniai">Straipsniai</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/atsijungti">Atsijungti</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/registruotis">Registruotis</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/prisijungti">Prisijungti</a>
+                </li>
+                {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 <br/>
+
+
+
 <div class="container">
+    <br>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     {% block content %}
     {% endblock %}
 </div>
