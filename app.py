@@ -31,7 +31,8 @@ class Article(db.Model):
     __tablename__ = 'article'
     id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.String(80), nullable=False)
-    autorius = db.Column(db.String(120), unique=True, nullable=False)
+    autorius_id = db.Column(db.Integer, db.ForeignKey("vartotojas.id"))
+    autorius = db.relationship("Vartotojas")
     pavadinimas = db.Column(db.String(120), unique=True, nullable=False)
     tekstas = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(120), default="published")
@@ -86,6 +87,9 @@ class Vartotojas(db.Model, UserMixin):
     el_pastas = db.Column("El. pašto adresas", db.String(120), unique=True, nullable=False)
     slaptazodis = db.Column("Slaptažodis", db.String(60), unique=True, nullable=False)
 
+    def __repr__(self):
+        return self.vardas
+
 
 @login_manager.user_loader
 def load_user(vartotojo_id):
@@ -117,7 +121,8 @@ def article(id):
 @app.route('/add_article', methods=['GET', 'POST'])
 def add_article():
     if request.method == "POST":
-        autorius = request.form['autorius']
+        autorius = current_user
+        # autorius = request.form['autorius']
         pavadinimas = request.form['pavadinimas']
         date = request.form['date']
         tekstas = request.form['tekstas']
