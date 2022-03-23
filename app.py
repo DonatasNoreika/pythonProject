@@ -9,7 +9,10 @@ from flask_login import LoginManager, UserMixin, current_user, logout_user, logi
 from flask_bcrypt import Bcrypt
 
 if __name__ == "__main__":
-    from forms import ContactForm, RegisterForm, MessageForm, TevasForm, VaikasForm, RegistracijosForma, PrisijungimoForma
+    from forms import ContactForm, RegisterForm, MessageForm, TevasForm, VaikasForm, RegistracijosForma, PrisijungimoForma, PaskyrosAtnaujinimoForma
+
+import secrets
+from PIL import Image
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -85,6 +88,7 @@ class Vartotojas(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     vardas = db.Column("Vardas", db.String(20), unique=True, nullable=False)
     el_pastas = db.Column("El. pašto adresas", db.String(120), unique=True, nullable=False)
+    nuotrauka = db.Column(db.String(20), nullable=False, default='default.jpg')
     slaptazodis = db.Column("Slaptažodis", db.String(60), unique=True, nullable=False)
 
     def __repr__(self):
@@ -242,6 +246,38 @@ def prisijungti():
         else:
             flash('Prisijungti nepavyko. Patikrinkite el. paštą ir slaptažodį', 'danger')
     return render_template('prisijungti.html', title='Prisijungti', form=form)
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, 'static/profilio_nuotraukos', picture_fn)
+
+    output_size = (125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+
+    return picture_fn
+
+@app.route("/paskyra", methods=['GET', 'POST'])
+@login_required
+def paskyra():
+    form = PaskyrosAtnaujinimoForma()
+    if form.validate_on_submit():
+        if form.nuotrauka.data:
+            nuotrauka = save_picture(form.nuotrauka.data)
+            current_user.nuotrauka = nuotrauka
+        current_user.vardas = form.vardas.data
+        current_user.el_pastas = form.el_pastas.data
+        db.session.commit()
+        flash('Tavo paskyra atnaujinta!', 'success')
+        return redirect(url_for('paskyra'))
+    elif request.method == 'GET':
+        form.vardas.data = current_user.vardas
+        form.el_pastas.data = current_user.el_pastas
+    nuotrauka = url_for('static', filename='profilio_nuotraukos/' + current_user.nuotrauka)
+    return render_template('paskyra.html', title='Account', form=form, nuotrauka=nuotrauka)
 
 @app.route("/atsijungti")
 def atsijungti():
