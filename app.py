@@ -378,6 +378,18 @@ def atsijungti():
     flash('Atsijungti pavyko!', 'success')
     return redirect(url_for('home'))
 
+@app.errorhandler(404)
+def klaida_404(klaida):
+    return render_template("404.html"), 404
+
+@app.errorhandler(403)
+def klaida_403(klaida):
+    return render_template("403.html"), 403
+
+@app.errorhandler(500)
+def klaida_500(klaida):
+    return render_template("500.html"), 500
+
 if __name__ == '__main__':
     db.create_all()
     app.run(host='127.0.0.1', port=8000, debug=True)
